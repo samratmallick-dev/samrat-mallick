@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import OptimizedImage from '@/components/common/OptimizedImage';
 import { Helmet } from 'react-helmet-async';
+import NotFound from '@/pages/client-view/not-found';
 
 const sectionVariants = {
       hidden: { opacity: 0, y: 30 },
@@ -42,14 +43,12 @@ const ProjectDetails = () => {
 
       if (error || !currentProject) {
             return (
-                  <div className="min-h-screen flex flex-col items-center justify-center bg-background text-foreground">
-                        <h2 className="text-2xl font-bold mb-4">Project Not Found</h2>
-                        <Link to="/projects">
-                              <Button variant="outline">
-                                    Return to Projects
-                              </Button>
-                        </Link>
-                  </div>
+                  <NotFound
+                        title="Project Not Found"
+                        message="This project doesn't exist, may have been removed, or the link is incorrect."
+                        homeLabel="Back to Projects"
+                        homePath="/projects"
+                  />
             );
       }
 

@@ -12,6 +12,7 @@ const MyPortfolio = lazy(() => import('./pages/client-view/portfolio'));
 const MyAllProjectList = lazy(() => import('./pages/client-view/project-listing'));
 const ProjectDetails = lazy(() => import('./pages/client-view/project-details'));
 const MyContact = lazy(() => import('./pages/client-view/contact'));
+const NotFound = lazy(() => import('./pages/client-view/not-found'));
 const Login = lazy(() => import('./pages/auth/login'));
 
 // Lazy-loaded admin views
@@ -67,9 +68,12 @@ const App = () => {
                                     <Route index element={<Navigate to="home" replace />} />
                                     <Route path="home" element={<MyPortfolio />} />
                                     <Route path="contact" element={<MyContact />} />
-                                    <Route path="*" element={<Navigate to="/portfolio/home" replace />} />
+                                    <Route path="*" element={<NotFound />} />
                               </Route>
-                              <Route path="*" element={<Navigate to="/portfolio/home" replace />} />
+
+                              <Route element={<MyPortfoliopageLayout />}>
+                                    <Route path="*" element={<NotFound />} />
+                              </Route>
                         </Routes>
                   </Suspense>
             </div>

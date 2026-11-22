@@ -17,9 +17,9 @@ Welcome to the portfolio of Samrat Mallick. I am a passionate Full Stack Develop
 - Database Management (MongoDB)
 
 ## Contact Information
-- Website: https://myportfolio-io-dusky.vercel.app/
+- Website: https://samrat-mallick-lx1b.vercel.app/
 - LinkedIn: https://www.linkedin.com/in/samrat-mallick01
 - GitHub: https://github.com/samratmallick-dev
 
 ## Trust Pages
-- Contact: https://myportfolio-io-dusky.vercel.app/portfolio/contact
+- Contact: https://samrat-mallick-lx1b.vercel.app/portfolio/contact
