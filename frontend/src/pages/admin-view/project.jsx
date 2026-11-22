@@ -48,7 +48,6 @@ const AdminViewProject = () => {
       const [editMode, setEditMode] = useState(false);
       const [editId, setEditId] = useState(null);
       const [selectedFeatured, setSelectedFeatured] = useState([]);
-      // Image upload state
       const [imageFile, setImageFile] = useState(null);
       const [imagePreview, setImagePreview] = useState(null);
 
@@ -104,10 +103,22 @@ const AdminViewProject = () => {
             return str.split(',').map(s => s.trim()).filter(Boolean);
       };
 
+      const toCsv = (entries) => {
+            if (!Array.isArray(entries)) return "";
+            return entries
+                  .map((entry) => {
+                        if (entry && typeof entry === "object") {
+                              return entry.title || entry.description || entry.challenge || entry.name || "";
+                        }
+                        return String(entry ?? "");
+                  })
+                  .filter(Boolean)
+                  .join(", ");
+      };
+
       const handleSubmit = async (e) => {
             e.preventDefault();
 
-            // Build multipart FormData
             const fd = new FormData();
             fd.append('title', formData.title);
             if (formData.slug) fd.append('slug', formData.slug);
@@ -116,7 +127,6 @@ const AdminViewProject = () => {
             fd.append('category', formData.category || '');
             if (formData.year) fd.append('year', formData.year);
             fd.append('technologies', formData.technologies || '');
-            // Arrays: send as JSON strings so backend can parse
             fd.append('features', JSON.stringify(parseCommaSeparated(formData.features)));
             fd.append('architecture', JSON.stringify(parseCommaSeparated(formData.architecture)));
             fd.append('process', JSON.stringify(parseCommaSeparated(formData.process)));
@@ -148,17 +158,16 @@ const AdminViewProject = () => {
                   category: item.category || '',
                   year: item.year || '',
                   technologies: Array.isArray(item.technologies) ? item.technologies.join(', ') : (item.technologies || ''),
-                  features: Array.isArray(item.features) ? item.features.join(', ') : '',
-                  architecture: Array.isArray(item.architecture) ? item.architecture.join(', ') : '',
-                  process: Array.isArray(item.process) ? item.process.join(', ') : '',
-                  challenges: Array.isArray(item.challenges) ? item.challenges.join(', ') : '',
-                  results: Array.isArray(item.results) ? item.results.join(', ') : '',
+                  features: toCsv(item.features),
+                  architecture: toCsv(item.architecture),
+                  process: toCsv(item.process),
+                  challenges: toCsv(item.challenges),
+                  results: toCsv(item.results),
                   githubUrl: item.githubUrl || '',
                   liveUrl: item.liveUrl || '',
                   order: item.order || 0,
                   status: item.status || 'Completed',
             });
-            // Show existing image as preview
             if (item.image?.url) {
                   setImagePreview(item.image.url);
             } else {

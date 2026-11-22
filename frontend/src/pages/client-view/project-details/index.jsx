@@ -15,6 +15,15 @@ const sectionVariants = {
       visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }
 };
 
+const asText = (entry) => {
+      if (entry === null || entry === undefined) return "";
+      if (typeof entry === "string") return entry;
+      if (typeof entry === "object") {
+            return entry.title || entry.description || entry.challenge || entry.name || "";
+      }
+      return String(entry);
+};
+
 const ProjectDetails = () => {
       const { slug } = useParams();
       const dispatch = useDispatch();
@@ -133,8 +142,6 @@ const ProjectDetails = () => {
                               </div>
                         </motion.div>
                   </div>
-
-                  {/* Project Image Banner */}
                   {image?.url && (
                         <div className="container mx-auto px-4 lg:px-8 mb-16">
                               <motion.div
@@ -157,14 +164,9 @@ const ProjectDetails = () => {
                               </motion.div>
                         </div>
                   )}
-
-                  {/* Main Content Grid */}
                   <div className="container mx-auto px-4 lg:px-8">
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-                              
-                              {/* Left Column (Main Content) */}
                               <div className="lg:col-span-2 space-y-16">
-                                    {/* About Project */}
                                     <motion.section 
                                           initial="hidden"
                                           whileInView="visible"
@@ -179,8 +181,6 @@ const ProjectDetails = () => {
                                                 <p className="leading-loose whitespace-pre-line">{description}</p>
                                           </div>
                                     </motion.section>
-
-                                    {/* Key Features */}
                                     {features.length > 0 && (
                                           <motion.section 
                                                 initial="hidden"
@@ -195,14 +195,12 @@ const ProjectDetails = () => {
                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                       {features.map((feature, idx) => (
                                                             <div key={idx} className="bg-card border border-border rounded-xl p-5 hover:bg-muted/60 transition-colors">
-                                                                  <p className="text-card-foreground">{feature}</p>
+                                                                  <p className="text-card-foreground">{asText(feature)}</p>
                                                             </div>
                                                       ))}
                                                 </div>
                                           </motion.section>
                                     )}
-
-                                    {/* Process */}
                                     {process.length > 0 && (
                                           <motion.section 
                                                 initial="hidden"
@@ -220,14 +218,12 @@ const ProjectDetails = () => {
                                                                   <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold text-sm">
                                                                         {idx + 1}
                                                                   </div>
-                                                                  <p className="text-muted-foreground mt-1 leading-relaxed">{step}</p>
+                                                                  <p className="text-muted-foreground mt-1 leading-relaxed">{asText(step)}</p>
                                                             </div>
                                                       ))}
                                                 </div>
                                           </motion.section>
                                     )}
-
-                                    {/* Challenges & Results */}
                                     {(challenges.length > 0 || results.length > 0) && (
                                           <motion.section 
                                                 initial="hidden"
@@ -245,7 +241,7 @@ const ProjectDetails = () => {
                                                             <ul className="space-y-3">
                                                                   {challenges.map((challenge, idx) => (
                                                                         <li key={idx} className="text-foreground bg-destructive/10 border border-destructive/25 rounded-lg p-4">
-                                                                              {challenge}
+                                                                              {asText(challenge)}
                                                                         </li>
                                                                   ))}
                                                             </ul>
@@ -260,7 +256,7 @@ const ProjectDetails = () => {
                                                             <ul className="space-y-3">
                                                                   {results.map((result, idx) => (
                                                                         <li key={idx} className="text-foreground bg-success/10 border border-success/25 rounded-lg p-4">
-                                                                              {result}
+                                                                              {asText(result)}
                                                                         </li>
                                                                   ))}
                                                             </ul>
@@ -269,10 +265,7 @@ const ProjectDetails = () => {
                                           </motion.section>
                                     )}
                               </div>
-
-                              {/* Right Column (Sidebar) */}
                               <div className="lg:col-span-1 space-y-8">
-                                    {/* Tech Stack */}
                                     <motion.div 
                                           initial="hidden"
                                           whileInView="visible"
@@ -292,8 +285,6 @@ const ProjectDetails = () => {
                                                 ))}
                                           </div>
                                     </motion.div>
-
-                                    {/* Architecture Overview (if available) */}
                                     {architecture.length > 0 && (
                                           <motion.div 
                                                 initial="hidden"
@@ -309,7 +300,7 @@ const ProjectDetails = () => {
                                                       {architecture.map((item, idx) => (
                                                             <li key={idx} className="flex items-start">
                                                                   <span className="text-primary mr-2">•</span>
-                                                                  {item}
+                                                                  {asText(item)}
                                                             </li>
                                                       ))}
                                                 </ul>

@@ -1,10 +1,9 @@
 import Logger from "../config/logger/logger.config.js";
 import contactRepository from "../repository/contact.repository.js";
 import ApiError from "../utilities/error/apiError.js";
-import { uploadToCloudinary } from "../utilities/cloudinary/upload.js";
+import { uploadToCloudinary, deleteAssetSafely } from "../utilities/cloudinary/upload.js";
 import emailService from "../utilities/email/email.service.js";
 import templateService from "../utilities/email/template.service.js";
-import { getIO } from "../config/socket/socket.config.js";
 
 class ContactService {
       async addUpdateContactDetails(contactData, image) {
@@ -18,6 +17,8 @@ class ContactService {
                   }
             }
 
+            const previousImageId = contactDetails?.contactImage?.public_id;
+
             if (image) {
                   const cloudinaryResponse = await uploadToCloudinary(image, "contact/images");
                   contactData.contactImage = {
@@ -30,6 +31,10 @@ class ContactService {
                   contactDetails = await contactRepository.updateContactDetails(contactDetails._id, contactData);
             } else {
                   contactDetails = await contactRepository.createContactDetails(contactData);
+            }
+
+            if (image && previousImageId) {
+                  await deleteAssetSafely(previousImageId);
             }
 
             return contactDetails;
@@ -62,6 +67,8 @@ class ContactService {
                   throw ApiError.notFound("Contact details not found");
             }
 
+            const previousImageId = existingContact.contactImage?.public_id;
+
             if (image) {
                   const cloudinaryResponse = await uploadToCloudinary(image, "contact/images");
                   contactData.contactImage = {
@@ -71,6 +78,9 @@ class ContactService {
             }
 
             const updatedContact = await contactRepository.updateContactDetails(id, contactData);
+            if (image && previousImageId) {
+                  await deleteAssetSafely(previousImageId);
+            }
             return updatedContact;
       }
 
@@ -86,19 +96,10 @@ class ContactService {
                   }
             }
 
-            try {
-                  const io = getIO();
-                  io.to("admin").emit("newMessage", message);
-            } catch (error) {
-                  Logger.error("Socket emit failed", error);
-            }
-
             this.sendEmailNotificationsAsync(messageData).catch(error => {
                   Logger.error("Background email sending failed", {
                         error: error.message,
                         stack: error.stack,
-                        userEmail: messageData.email,
-                        userName: messageData.name
                   });
             });
 
@@ -107,10 +108,7 @@ class ContactService {
 
       async sendEmailNotificationsAsync(messageData) {
             try {
-                  Logger.info("Starting background email notifications", {
-                        userEmail: messageData.email,
-                        userName: messageData.name
-                  });
+                  Logger.info("Starting background email notifications");
 
                   const contactDetails = await contactRepository.findActiveContactDetails();
 
@@ -131,7 +129,7 @@ class ContactService {
                                     text: `Dear ${messageData.name},\n\nThank you for contacting us. We have received your message and will get back to you soon.\n\nYour message:\n${messageData.message}\n\nBest regards,\nThe Team`
                               });
                         })().then(() => {
-                              Logger.info(`Confirmation email sent successfully to ${messageData.email}`);
+                              Logger.info("Contact acknowledgment email sent");
                               return { type: 'user', success: true };
                         }),
 
@@ -153,7 +151,7 @@ class ContactService {
                                           text: `You have received a new message from ${messageData.name} (${messageData.email}):\n\nMobile: ${messageData.mobile || 'Not provided'}\nMessage: ${messageData.message}`
                                     });
                               })().then(() => {
-                                    Logger.info(`Notification email sent successfully to admin: ${contactDetails.email}`);
+                                    Logger.info("Admin contact notification email sent");
                                     return { type: 'admin', success: true };
                               })
                               : Promise.resolve({ type: 'admin', success: false, reason: 'No admin email configured' })
@@ -173,7 +171,6 @@ class ContactService {
                   });
 
                   Logger.info("Background email notifications completed", {
-                        userEmail: messageData.email,
                         results: results.map(r => r.status)
                   });
 
@@ -181,8 +178,6 @@ class ContactService {
                   Logger.error("Critical error in email notification process", {
                         error: error.message,
                         stack: error.stack,
-                        userEmail: messageData.email,
-                        userName: messageData.name
                   });
                   throw error;
             }

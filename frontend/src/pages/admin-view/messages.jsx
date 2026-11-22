@@ -15,6 +15,9 @@ const AdminMessages = () => {
       const [processingId, setProcessingId] = useState(null);
 
       const handleNewMessage = useCallback((payload) => {
+            if (payload?.__adminAccessDenied || payload?.__adminAccessRevoked) {
+                  return;
+            }
             const message = payload?.data || payload;
             toast.success(`New message from ${message?.name || 'someone'}`);
             dispatch(getAllMessages());

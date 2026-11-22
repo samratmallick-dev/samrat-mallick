@@ -1,6 +1,6 @@
 import heroRepository from "../repository/hero.repository.js";
 import ApiError from "../utilities/error/apiError.js";
-import { uploadToCloudinary } from "../utilities/cloudinary/upload.js";
+import { uploadToCloudinary, deleteAssetSafely } from "../utilities/cloudinary/upload.js";
 import Logger from "../config/logger/logger.config.js";
 import { clearCache } from "../middleware/cache.middleware.js";
 
@@ -12,6 +12,8 @@ class HeroService {
             if (heroData.title && typeof heroData.title === 'string') {
                   heroData.title = heroData.title.split(',').map(title => title.trim()).filter(title => title);
             }
+
+            const previousImageId = heroContent?.profileImage?.public_id;
 
             if (profileImage) {
                   Logger.info('Uploading hero profile image to Cloudinary');
@@ -28,6 +30,10 @@ class HeroService {
             } else {
                   Logger.info('Creating new hero content');
                   heroContent = await heroRepository.create(heroData);
+            }
+
+            if (profileImage && previousImageId) {
+                  await deleteAssetSafely(previousImageId);
             }
 
             clearCache('/public');
@@ -73,10 +79,11 @@ class HeroService {
                   throw ApiError.notFound("Hero content not found");
             }
 
-            // Handle title as array
             if (heroData.title && typeof heroData.title === 'string') {
                   heroData.title = heroData.title.split(',').map(title => title.trim()).filter(title => title);
             }
+
+            const previousImageId = existingHero.profileImage?.public_id;
 
             if (profileImage) {
                   const cloudinaryResponse = await uploadToCloudinary(profileImage, "hero/profile");
@@ -87,6 +94,9 @@ class HeroService {
             }
 
             const updatedHero = await heroRepository.updateById(id, heroData);
+            if (profileImage && previousImageId) {
+                  await deleteAssetSafely(previousImageId);
+            }
             clearCache('/public');
             clearCache('/hero');
             return updatedHero;
@@ -100,6 +110,7 @@ class HeroService {
             }
 
             await heroRepository.deleteById(id);
+            await deleteAssetSafely(heroContent.profileImage?.public_id);
             clearCache('/public');
             clearCache('/hero');
             return { message: "Hero content deleted successfully" };

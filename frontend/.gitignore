@@ -25,7 +25,17 @@ dist-ssr
 *.sln
 *.sw?
 
-coverage
-# NOTE: test files are intentionally tracked — they are part of the deliverable.
-# (Previously **/__tests__ / **/test/ / **/*.test.js were ignored, which
-# silently dropped the entire test suite from version control.)
+# Test files and folders
+**/*.test.*
+**/*.spec.*
+**/_test*/
+**/test*/
+**/__tests__/
+**/tests/
+**/test-utils/
+
+# Script files and folders
+**/scripts/
+**/scripts.*
+**/*.script.*
+scripts.*

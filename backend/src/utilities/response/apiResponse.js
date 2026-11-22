@@ -76,7 +76,7 @@ export class ApiResponse {
                   timestamp: this.timestamp
             };
 
-            if (this.success && this.data && Object.keys(this.data).length > 0) {
+            if (this.success && this.data !== undefined && this.data !== null) {
                   response.data = this.data;
             }
 

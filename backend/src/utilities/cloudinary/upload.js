@@ -72,6 +72,17 @@ export const uploadToCloudinary = async (file, options = {}) => {
       }
 };
 
+export const deleteAssetSafely = async (publicId, resourceType = "image") => {
+      if (!publicId) return false;
+      try {
+            await deleteFromCloudinary(publicId, resourceType);
+            return true;
+      } catch (error) {
+            Logger.warn("Cloudinary asset cleanup skipped", { publicId, error: error.message });
+            return false;
+      }
+};
+
 export const deleteFromCloudinary = async (
       publicId,
       resourceType = "image"

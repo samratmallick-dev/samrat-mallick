@@ -7,9 +7,9 @@ const router = Router();
 
 router.post("/create-services", authenticate, validateService, handleValidationErrors, serviceController.createService);
 router.get("/get-all-services", serviceController.getAllServices);
-router.get("/get-services/:servicesId", serviceController.getServiceById);
-router.put("/update-services/:servicesId", authenticate, validateService, handleValidationErrors, serviceController.updateService);
-router.delete("/delete-services/:servicesId", authenticate, serviceController.deleteService);
+router.get("/get-services/:id", serviceController.getServiceById);
+router.put("/update-services/:id", authenticate, validateService, handleValidationErrors, serviceController.updateService);
+router.delete("/delete-services/:id", authenticate, serviceController.deleteService);
 router.get("/get-all-services-admin", authenticate, serviceController.getAllServicesAdmin);
 
 export default router;

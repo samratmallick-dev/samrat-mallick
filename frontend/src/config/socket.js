@@ -1,4 +1,5 @@
 import { io } from "socket.io-client";
+import { getAccessToken, refreshAuthOnce } from "./api.js";
 
 const SOCKET_URL = import.meta.env.DEV
       ? import.meta.env.VITE_SOCKET_URL || "http://localhost:8000"
@@ -10,6 +11,27 @@ if (!SOCKET_URL) {
 
 let socket = null;
 let isConnecting = false;
+let authErrorHandler = null;
+let authRetries = 0;
+const MAX_AUTH_RETRIES = 2;
+
+const authPayload = (tokenOverride) => {
+      const token = tokenOverride ?? getAccessToken?.() ?? null;
+      return token ? { token } : {};
+};
+
+export const setSocketAccessToken = (token) => {
+      if (socket) {
+            socket.auth = authPayload(token);
+      }
+};
+
+export const onSocketAuthError = (handler) => {
+      authErrorHandler = typeof handler === "function" ? handler : null;
+      return () => {
+            if (authErrorHandler === handler) authErrorHandler = null;
+      };
+};
 
 export const getSocket = () => {
       if (socket?.connected || isConnecting) return socket;
@@ -17,6 +39,7 @@ export const getSocket = () => {
       isConnecting = true;
 
       socket = io(SOCKET_URL, {
+            auth: authPayload(),
             transports: ["websocket", "polling"],
             withCredentials: true,
             reconnection: true,
@@ -29,28 +52,39 @@ export const getSocket = () => {
 
       socket.on("connect", () => {
             isConnecting = false;
-            console.log("✅ Socket.IO connected:", socket.id);
+            authRetries = 0;
+            socket.auth = authPayload();
       });
 
-      socket.on("disconnect", (reason) => {
-            console.log("❌ Socket.IO disconnected:", reason);
+      socket.on("disconnect", () => {
+            isConnecting = false;
       });
 
       socket.on("connect_error", (err) => {
             isConnecting = false;
-            console.warn("🚨 Socket.IO connection error:", err.message);
+            if (err?.message !== "Unauthorized") return;
+
+            // The handshake rejected the access token (expired or revoked).
+            // Reuse the REST client's coordinated refresh, then retry a bounded
+            // number of times so a dead session cannot loop forever.
+            if (authRetries < MAX_AUTH_RETRIES && getAccessToken()) {
+                  authRetries += 1;
+                  refreshAuthOnce()
+                        .then(() => {
+                              socket.auth = authPayload();
+                              if (!socket.connected) socket.connect();
+                        })
+                        .catch(() => {
+                              authRetries = MAX_AUTH_RETRIES;
+                              authErrorHandler?.(err);
+                        });
+            } else {
+                  authErrorHandler?.(err);
+            }
       });
 
-      socket.on("reconnect_attempt", (attempt) => {
-            console.log(`🔄 Socket.IO reconnection attempt #${attempt}`);
-      });
-
-      socket.on("reconnect", (attempt) => {
-            console.log(`✅ Socket.IO reconnected after ${attempt} attempts`);
-      });
-
-      socket.on("reconnect_failed", () => {
-            console.error("❌ Socket.IO reconnection failed permanently");
+      socket.on("reconnect_attempt", () => {
+            socket.auth = authPayload();
       });
 
       return socket;
@@ -80,11 +114,15 @@ export const offSocketEvent = (event, callback) => {
       if (socket) socket.off(event, callback);
 };
 
-export const emitSocketEvent = (event, data) => {
+export const emitSocketEvent = (event, data, ack) => {
       const s = getSocket();
       if (s.connected) {
-            s.emit(event, data);
-      } else {
-            console.warn(`Socket not connected — cannot emit "${event}"`);
+            if (typeof ack === "function") {
+                  s.emit(event, data, ack);
+            } else {
+                  s.emit(event, data);
+            }
+            return true;
       }
+      return false;
 };

@@ -17,6 +17,7 @@ import {
 import { generateOTP } from "../utilities/email/generateOTP.js";
 import emailService from "../utilities/email/email.service.js";
 import templateService from "../utilities/email/template.service.js";
+import { revokeAdminSocketAccess } from "../config/socket/socket.config.js";
 
 const refreshDays = () => {
       const ttl = Number(process.env.REFRESH_TOKEN_TTL_DAYS || 7);
@@ -24,6 +25,8 @@ const refreshDays = () => {
 };
 
 const refreshExpiry = () => new Date(Date.now() + refreshDays() * 24 * 60 * 60 * 1000);
+
+const VALID_OTP_PURPOSES = new Set(["email_update", "password_update"]);
 
 const refreshRaceGraceMs = () => {
       const raw = Number(process.env.REFRESH_RACE_GRACE_MS);
@@ -178,7 +181,6 @@ class AdminService {
             return {
                   admin,
                   accessToken,
-                  // Raw refresh token -> HTTP-only cookie only, never JSON.
                   refreshToken: rawRefreshToken,
                   session,
             };
@@ -296,6 +298,10 @@ class AdminService {
                   hashes.push(hashRefreshToken(rawRefreshToken));
             }
 
+            const linkedSessions = await Promise.all(
+                  hashes.map((hash) => adminSessionRepository.findByRefreshTokenHash(hash).catch(() => null))
+            );
+
             if (hashes.length > 0) {
                   await adminSessionRepository.revokeByHashes(hashes);
             }
@@ -303,12 +309,19 @@ class AdminService {
                   await adminSessionRepository.revokeById(sessionId).catch(() => {});
             }
 
+            const revokedSessions = new Set(
+                  linkedSessions.filter(Boolean).map((session) => String(session._id))
+            );
+            if (sessionId) revokedSessions.add(String(sessionId));
+            revokedSessions.forEach((id) => revokeAdminSocketAccess({ sessionId: id }));
+
             auditLog("admin.logout", { sessionId: sessionId ? String(sessionId) : undefined, ip: req?.ip });
             return true;
       }
 
       async logoutAll(adminId, req) {
             const result = await adminSessionRepository.revokeAllForAdmin(adminId);
+            revokeAdminSocketAccess({ adminId });
             auditLog("admin.logout_all", {
                   adminId: String(adminId),
                   revoked: result?.modifiedCount ?? 0,
@@ -338,6 +351,7 @@ class AdminService {
             if (!session) {
                   throw ApiError.notFound("Session not found");
             }
+            revokeAdminSocketAccess({ sessionId: sessionId });
             auditLog("admin.session.revoked", {
                   adminId: String(adminId),
                   sessionId: String(sessionId),
@@ -374,6 +388,7 @@ class AdminService {
             });
 
             const revoked = await adminSessionRepository.revokeAllForAdmin(adminId);
+            revokeAdminSocketAccess({ adminId });
 
             auditLog("admin.password.changed", {
                   adminId: String(adminId),
@@ -424,16 +439,35 @@ class AdminService {
             const admin = await adminRepository.findById(adminId);
             if (!admin) throw ApiError.notFound("Admin not found");
 
+            if (!VALID_OTP_PURPOSES.has(purpose)) {
+                  throw ApiError.badRequest("Unsupported OTP purpose");
+            }
+
+            const normalizedNewEmail = purpose === "email_update"
+                  ? String(newEmail || "").toLowerCase().trim()
+                  : undefined;
+
+            if (purpose === "email_update") {
+                  if (!normalizedNewEmail) {
+                        throw ApiError.badRequest("A new email address is required");
+                  }
+                  if (normalizedNewEmail === admin.email) {
+                        throw ApiError.badRequest("New email must differ from the current email");
+                  }
+                  const taken = await adminRepository.findByEmail(normalizedNewEmail);
+                  if (taken) throw ApiError.conflict("Email is already in use");
+            }
+
             const otp = generateOTP();
             const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
 
             await adminRepository.updateById(adminId, {
                   otp,
                   otpExpiry,
-                  ...(purpose === "email_update" && { newEmail })
+                  ...(purpose === "email_update" && { newEmail: normalizedNewEmail })
             });
 
-            const emailTo = purpose === "email_update" ? newEmail : admin.email;
+            const emailTo = purpose === "email_update" ? normalizedNewEmail : admin.email;
             const subject =
                   purpose === "email_update"
                         ? "Email Update OTP"
@@ -498,6 +532,15 @@ class AdminService {
       async verifyOTPAndUpdateEmail(adminId, otp) {
             const admin = await this.#verifyStoredOtp(adminId, otp);
 
+            if (!admin.newEmail) {
+                  throw ApiError.badRequest("No pending email update found");
+            }
+
+            const taken = await adminRepository.findByEmail(admin.newEmail);
+            if (taken && String(taken._id) !== String(adminId)) {
+                  throw ApiError.conflict("Email is already in use");
+            }
+
             auditLog("admin.email.changed", { adminId: String(adminId) });
 
             return adminRepository.updateById(adminId, {
@@ -518,6 +561,7 @@ class AdminService {
             });
 
             const revoked = await adminSessionRepository.revokeAllForAdmin(adminId);
+            revokeAdminSocketAccess({ adminId });
 
             auditLog("admin.password.changed", {
                   adminId: String(adminId),

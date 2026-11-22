@@ -3,6 +3,15 @@ node_modules/
 *.log
 logs/
 coverage/
-# NOTE: test files are intentionally tracked — they are part of the deliverable.
-# (Previously **/*.test.js / **/test/ were ignored, which silently dropped the
-# entire test suite from version control.)
+# Test files and folders
+**/*.test.*
+**/*.spec.*
+**/_test*/
+**/test*/
+**/__tests__/
+**/tests/
+**/test-utils/
+/**/scripts/
+**/scripts.*
+**/*.script.*
+scripts.**.js

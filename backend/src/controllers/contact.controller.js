@@ -1,7 +1,7 @@
 import contactService from "../service/contact.service.js";
 import { sendSuccess, sendCreated } from "../utilities/response/apiResponse.js";
 import { asyncHandler } from "../utilities/error/asyncHandler.js";
-import { broadcastPortfolioUpdate } from "../config/socket/socket.config.js";
+import { broadcastPortfolioUpdate, broadcastPrivateAdminEvent } from "../config/socket/socket.config.js";
 
 class ContactController {
       addUpdateContactDetails = asyncHandler(async (req, res) => {
@@ -29,7 +29,7 @@ class ContactController {
       sendMessage = asyncHandler(async (req, res) => {
             const messageData = req.body;
             const message = await contactService.sendMessage(messageData);
-            broadcastPortfolioUpdate("newMessage", message);
+            broadcastPrivateAdminEvent("newMessage", message);
             sendCreated(res, "Message sent successfully. You will receive a confirmation email shortly.", message);
       });
 

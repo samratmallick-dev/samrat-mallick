@@ -1,12 +1,14 @@
 import aboutRepository from "../repository/about.repository.js";
 import ApiError from "../utilities/error/apiError.js";
-import { uploadToCloudinary } from "../utilities/cloudinary/upload.js";
+import { uploadToCloudinary, deleteAssetSafely } from "../utilities/cloudinary/upload.js";
 import Logger from "../config/logger/logger.config.js";
 
 class AboutService {
       async addUpdateAboutContent(aboutData, aboutImage) {
             Logger.info('Adding/updating about content', { hasImage: !!aboutImage });
             let aboutContent = await aboutRepository.findActive();
+
+            const previousImageId = aboutContent?.aboutImage?.public_id;
 
             if (aboutImage) {
                   Logger.info('Uploading about image to Cloudinary');
@@ -23,6 +25,10 @@ class AboutService {
             } else {
                   Logger.info('Creating new about content');
                   aboutContent = await aboutRepository.create(aboutData);
+            }
+
+            if (aboutImage && previousImageId) {
+                  await deleteAssetSafely(previousImageId);
             }
 
             Logger.info('About content operation completed successfully');
@@ -66,6 +72,8 @@ class AboutService {
                   throw ApiError.notFound("About content not found");
             }
 
+            const previousImageId = existingAbout.aboutImage?.public_id;
+
             if (aboutImage) {
                   const cloudinaryResponse = await uploadToCloudinary(aboutImage, "about/profile");
                   aboutData.aboutImage = {
@@ -75,6 +83,9 @@ class AboutService {
             }
 
             const updatedAbout = await aboutRepository.updateById(id, aboutData);
+            if (aboutImage && previousImageId) {
+                  await deleteAssetSafely(previousImageId);
+            }
             return updatedAbout;
       }
 
@@ -86,6 +97,7 @@ class AboutService {
             }
 
             await aboutRepository.deleteById(id);
+            await deleteAssetSafely(aboutContent.aboutImage?.public_id);
             return { message: "About content deleted successfully" };
       }
 

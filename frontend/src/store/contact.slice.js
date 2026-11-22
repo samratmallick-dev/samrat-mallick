@@ -11,7 +11,6 @@ import {
       fetchUnreadCount
 } from "../config/api.js";
 
-// Async thunks
 export const getContactDetails = createAsyncThunk(
       "contact/getContactDetails",
       async (_, { rejectWithValue }) => {
@@ -19,7 +18,7 @@ export const getContactDetails = createAsyncThunk(
                   const response = await fetchContactDetails();
                   return response.data;
             } catch (error) {
-                  console.error('Get contact details error:', error);
+                  console.error('Get contact details error:', error?.response?.status || error?.message || 'unknown');
                   return rejectWithValue(error.message || "Failed to fetch contact details");
             }
       }
@@ -32,7 +31,7 @@ export const addUpdateContactDetails = createAsyncThunk(
                   const response = await addOrUpdateContactDetails(formData);
                   return response.data;
             } catch (error) {
-                  console.error('Add/update contact details error:', error);
+                  console.error('Add/update contact details error:', error?.response?.status || error?.message || 'unknown');
                   return rejectWithValue(error.message || "Failed to update contact details");
             }
       }
@@ -45,7 +44,7 @@ export const updateContactDetailsById = createAsyncThunk(
                   const response = await updateContactDetails(id, formData);
                   return response.data;
             } catch (error) {
-                  console.error('Update contact details error:', error);
+                  console.error('Update contact details error:', error?.response?.status || error?.message || 'unknown');
                   return rejectWithValue(error.message || "Failed to update contact details");
             }
       }
@@ -58,9 +57,8 @@ export const sendMessage = createAsyncThunk(
                   const response = await sendContactMessage(messageData);
                   return response.data;
             } catch (error) {
-                  console.error('Send message error:', error);
+                  console.error('Send message error:', error?.response?.status || error?.message || 'unknown');
 
-                  // Extract error message properly
                   let errorMessage = "Failed to send message. Please try again.";
 
                   if (error.message) {
@@ -83,7 +81,7 @@ export const getAllMessages = createAsyncThunk(
                   const response = await fetchAllMessagesAdmin();
                   return response.data;
             } catch (error) {
-                  console.error('Get all messages error:', error);
+                  console.error('Get all messages error:', error?.response?.status || error?.message || 'unknown');
                   return rejectWithValue(error.message || "Failed to fetch messages");
             }
       }
@@ -96,7 +94,7 @@ export const getMessageById = createAsyncThunk(
                   const response = await fetchMessageById(messageId);
                   return response.data;
             } catch (error) {
-                  console.error('Get message by ID error:', error);
+                  console.error('Get message by ID error:', error?.response?.status || error?.message || 'unknown');
                   return rejectWithValue(error.message || "Failed to fetch message");
             }
       }
@@ -109,7 +107,7 @@ export const deleteMessageById = createAsyncThunk(
                   await deleteMessage(messageId);
                   return messageId;
             } catch (error) {
-                  console.error('Delete message error:', error);
+                  console.error('Delete message error:', error?.response?.status || error?.message || 'unknown');
                   return rejectWithValue(error.message || "Failed to delete message");
             }
       }
@@ -122,7 +120,7 @@ export const markAsRead = createAsyncThunk(
                   const response = await markMessageAsRead(messageId);
                   return { ...response.data, _id: messageId };
             } catch (error) {
-                  console.error('Mark as read error:', error);
+                  console.error('Mark as read error:', error?.response?.status || error?.message || 'unknown');
                   return rejectWithValue(error.message || "Failed to mark as read");
             }
       }
@@ -133,9 +131,12 @@ export const getUnreadCount = createAsyncThunk(
       async (_, { rejectWithValue }) => {
             try {
                   const response = await fetchUnreadCount();
-                  return response.data;
+                  const data = response?.data;
+                  if (typeof data === "number") return data;
+                  if (data && typeof data === "object") return Number(data.count) || 0;
+                  return Number(response?.count) || 0;
             } catch (error) {
-                  console.error('Get unread count error:', error);
+                  console.error('Get unread count error:', error?.response?.status || error?.message || 'unknown');
                   return rejectWithValue(error.message || "Failed to fetch unread count");
             }
       }
@@ -168,7 +169,6 @@ const contactSlice = createSlice({
       },
       extraReducers: (builder) => {
             builder
-                  // Get contact details
                   .addCase(getContactDetails.pending, (state) => {
                         state.loading = true;
                         state.error = null;
@@ -181,7 +181,6 @@ const contactSlice = createSlice({
                         state.loading = false;
                         state.error = action.payload;
                   })
-                  // Add/Update contact details
                   .addCase(addUpdateContactDetails.pending, (state) => {
                         state.loading = true;
                         state.error = null;
@@ -194,7 +193,6 @@ const contactSlice = createSlice({
                         state.loading = false;
                         state.error = action.payload;
                   })
-                  // Update contact details by ID
                   .addCase(updateContactDetailsById.pending, (state) => {
                         state.loading = true;
                         state.error = null;
@@ -207,7 +205,6 @@ const contactSlice = createSlice({
                         state.loading = false;
                         state.error = action.payload;
                   })
-                  // Send message
                   .addCase(sendMessage.pending, (state) => {
                         state.messageSubmitting = true;
                         state.messageSuccess = false;
@@ -223,7 +220,6 @@ const contactSlice = createSlice({
                         state.messageSuccess = false;
                         state.error = action.payload;
                   })
-                  // Get all messages
                   .addCase(getAllMessages.pending, (state) => {
                         state.loading = true;
                         state.error = null;
@@ -236,7 +232,6 @@ const contactSlice = createSlice({
                         state.loading = false;
                         state.error = action.payload;
                   })
-                  // Get message by ID
                   .addCase(getMessageById.pending, (state) => {
                         state.loading = true;
                         state.error = null;
@@ -249,7 +244,6 @@ const contactSlice = createSlice({
                         state.loading = false;
                         state.error = action.payload;
                   })
-                  // Delete message
                   .addCase(deleteMessageById.pending, (state) => {
                         state.loading = true;
                         state.error = null;
@@ -262,7 +256,6 @@ const contactSlice = createSlice({
                         state.loading = false;
                         state.error = action.payload;
                   })
-                  // Mark as read
                   .addCase(markAsRead.pending, (state) => {
                         state.error = null;
                   })

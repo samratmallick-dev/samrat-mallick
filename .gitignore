@@ -1,3 +1,18 @@
 src.zip
 start-dev.js 
 private.md
+
+# Test files and folders
+**/*.test.*
+**/*.spec.*
+**/_test*/
+**/test*/
+**/__tests__/
+**/tests/
+**/test-utils/
+
+# Script files and folders
+**/scripts/
+**/scripts.*
+**/*.script.*
+scripts.*

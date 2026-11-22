@@ -715,7 +715,7 @@ export const sendContactMessage = async (messageData) => {
             });
             return response.data;
       } catch (error) {
-            console.error('sendContactMessage API error:', error);
+            console.error('sendContactMessage API error:', error?.response?.status || error?.message || 'unknown');
             if (error.code === 'ECONNABORTED') {
                   throw new Error('Request timeout. Please try again.');
             }
@@ -794,7 +794,9 @@ api.interceptors.request.use(
             return config;
       },
       (error) => {
-            console.error('Request interceptor error:', error);
+            // Never log the error object: Axios errors embed `config.headers`,
+            // which contains the Authorization bearer token.
+            console.error('Request interceptor error:', error?.message || 'unknown');
             return Promise.reject(error);
       }
 );
@@ -811,6 +813,9 @@ const refreshOnce = () => {
       }
       return refreshInFlight;
 };
+
+/** Shared by the Axios interceptor and the Socket.IO layer. */
+export const refreshAuthOnce = () => refreshOnce();
 
 const redirectToLogin = () => {
       if (typeof window === 'undefined') return;
