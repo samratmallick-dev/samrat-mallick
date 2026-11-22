@@ -1,15 +1,5 @@
 import Logger from "../config/logger/logger.config.js";
 
-/**
- * Security audit logging.
- *
- * Records WHO did WHAT and WHEN, and deliberately refuses to record
- * credentials, tokens, cookies, OTPs or hashes even if a caller passes them.
- *
- * Details are serialised into the message because the project's winston
- * formatter only renders the message string.
- */
-
 const SENSITIVE_KEY_PATTERN =
       /password|passwd|pwd|token|secret|cookie|authorization|otp|hash|credential|bootstrap/i;
 

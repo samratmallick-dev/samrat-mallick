@@ -12,7 +12,6 @@ const port = Number(process.env.PORT || 5000);
 let httpServer;
 
 const startServer = async () => {
-      // Fail fast when JWT/cookie/bootstrap secrets are missing or unsafe.
       validateEnvironment();
 
       await connectDb();

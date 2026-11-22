@@ -5,17 +5,17 @@ import { Skeleton } from '../ui/skeleton';
 const SkillsSkeleton = () => (
       <>
             {[...Array(3)].map((_, i) => (
-                  <Card key={i} className="p-6">
-                        <Skeleton className="h-6 w-1/2 mb-4" />
-                        <div className="space-y-4">
-                              {[...Array(4)].map((_, j) => (
-                                    <div key={j} className="flex items-center justify-between">
-                                          <div className="flex items-center space-x-3">
-                                                <Skeleton className="w-5 h-5 rounded-full" />
-                                                <Skeleton className="h-4 w-24" />
-                                          </div>
-                                          <Skeleton className="h-4 w-12" />
-                                    </div>
+                  <Card key={i} className="flex h-full flex-col gap-5 rounded-2xl p-6">
+                        <div className="flex items-center gap-3">
+                              <Skeleton className="h-10 w-10 shrink-0 rounded-xl" />
+                              <div className="space-y-2">
+                                    <Skeleton className="h-5 w-36" />
+                                    <Skeleton className="h-3 w-20" />
+                              </div>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                              {[...Array(6)].map((_, j) => (
+                                    <Skeleton key={j} className="h-8 w-24 rounded-full" />
                               ))}
                         </div>
                   </Card>

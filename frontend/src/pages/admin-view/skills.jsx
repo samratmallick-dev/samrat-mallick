@@ -25,7 +25,6 @@ const initialCategoryFormData = {
 const initialSkillFormData = {
       category: '',
       name: '',
-      level: '',
       iconName: '',
       iconColor: ''
 };
@@ -155,7 +154,7 @@ const AdminViewSkills = () => {
                                                                                     <li key={skillItem._id} className="flex items-center justify-between p-2 rounded-md bg-muted/50">
                                                                                           <div>
                                                                                                 <p className="font-semibold">{skillItem.name}</p>
-                                                                                                <p className="text-sm text-muted-foreground">Level: {skillItem.level}%</p>
+                                                                                                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">{skillItem.iconName}</span>
                                                                                           </div>
                                                                                           <div className="flex gap-2">
                                                                                                 <Button

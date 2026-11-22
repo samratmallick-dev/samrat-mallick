@@ -39,16 +39,21 @@ class SkillRepository {
       }
 
       async updateSkillInCategory(categoryId, skillId, skillData) {
+            const update = {
+                  "skills.$.name": skillData.name,
+                  "skills.$.iconName": skillData.iconName,
+                  "skills.$.iconColor": skillData.iconColor,
+            };
+
+            // Old records may still hold a level; only touch it when supplied
+            // so existing data is never lost or overwritten with undefined.
+            if (skillData.level !== undefined) {
+                  update["skills.$.level"] = skillData.level;
+            }
+
             return Skill.findOneAndUpdate(
                   { _id: categoryId, "skills._id": skillId },
-                  {
-                        $set: {
-                              "skills.$.name": skillData.name,
-                              "skills.$.level": skillData.level,
-                              "skills.$.iconName": skillData.iconName,
-                              "skills.$.iconColor": skillData.iconColor,
-                        },
-                  },
+                  { $set: update },
                   { returnDocument: 'after' }
             );
       }

@@ -8,8 +8,6 @@ import { visualizer } from "rollup-plugin-visualizer";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// Emits a manifest of every built chunk/asset so the service worker can
-// precache the complete app shell (including lazily-loaded chunks) offline.
 const offlineShellManifest = () => ({
       name: "offline-shell-manifest",
       apply: "build",
@@ -66,13 +64,6 @@ export default defineConfig(({ mode }) => {
                               },
                         },
                   },
-            },
-            test: {
-                  environment: 'jsdom',
-                  globals: true,
-                  setupFiles: './src/test/setup.js',
-                  css: false,
-                  restoreMocks: true,
             },
       };
 });

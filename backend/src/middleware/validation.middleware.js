@@ -143,7 +143,7 @@ const validateSkillCategory = [
 
 const validateSkill = [
       body("name").notEmpty().withMessage("Skill name is required").trim(),
-      body("level").isInt({ min: 0, max: 100 }).withMessage("Level must be between 0 and 100"),
+      body("level").optional().isInt({ min: 0, max: 100 }).withMessage("Level must be between 0 and 100"),
       body("iconName").notEmpty().withMessage("Icon name is required"),
       body("iconColor").notEmpty().withMessage("Icon color is required"),
 ];

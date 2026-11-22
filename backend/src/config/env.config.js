@@ -1,13 +1,6 @@
 import Logger from "./logger/logger.config.js";
 import { MIN_SECRET_LENGTH } from "../utilities/token.utility.js";
 
-/**
- * Startup configuration validation.
- *
- * Fails fast (before the HTTP server accepts traffic) when authentication
- * secrets are missing or unsafe in production. Never prints secret values.
- */
-
 const VALID_SAME_SITE = ["lax", "strict", "none"];
 
 const problems = [];
@@ -81,8 +74,6 @@ export const validateEnvironment = () => {
       requireValue("JWT_ISSUER", {});
       requireValue("JWT_AUDIENCE", {});
 
-      // Without a bootstrap secret the first-admin endpoint stays disabled, which
-      // is safe but makes a fresh deployment unusable — warn instead of failing.
       requireValue("ADMIN_BOOTSTRAP_SECRET", { minLength: 24, requiredInProduction: false });
 
       validateNumberRange("REFRESH_TOKEN_TTL_DAYS", 1, 30, 7);
@@ -103,17 +94,12 @@ export const validateEnvironment = () => {
             for (const problem of problems) {
                   Logger.error(`Environment error: ${problem}`);
             }
-            // Fail fast: without these values authentication cannot work safely and
-            // we must never fall back to a hardcoded secret.
             throw new Error(
                   `Invalid environment configuration:\n- ${problems.join("\n- ")}`
             );
       }
 
-      if (isProduction) {
-            // Production-only sanity information; never includes secret values.
-            Logger.info("Environment validation passed (production)");
-      }
+      Logger.info(`Environment validation passed (${process.env.NODE_ENV ?? "development"})`);
 
       return { valid: problems.length === 0, problems: [...problems], warnings: [...warnings] };
 };

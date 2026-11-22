@@ -7,11 +7,12 @@ const skillItemSchema = new mongoose.Schema(
                   required: true, 
                   trim: true 
             },
-            level: { 
-                  type: Number, 
-                  required: true, 
-                  min: 0, 
-                  max: 100 
+            // Kept optional for backward compatibility with existing records.
+            // Proficiency ratings are no longer collected or displayed.
+            level: {
+                  type: Number,
+                  min: 0,
+                  max: 100
             },
             iconName: { 
                   type: String, 

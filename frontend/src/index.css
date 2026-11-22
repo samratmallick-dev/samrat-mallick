@@ -376,10 +376,6 @@
             }
       }
 
-      .skill-bar {
-            transition: width 1.5s ease-in-out;
-      }
-
       .hover-lift {
             transition: var(--transition-smooth);
       }

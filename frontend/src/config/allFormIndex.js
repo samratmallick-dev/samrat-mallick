@@ -167,15 +167,6 @@ export const adminSkillFormIndex = [
             componentType: 'input',
       },
       {
-            name: 'level',
-            label: 'Proficiency Level',
-            type: 'number',
-            placeholder: 'e.g. 90',
-            componentType: 'input',
-            max: 100,
-            min: 0
-      },
-      {
             name: 'iconName',
             label: 'Icon Name',
             type: 'text',
