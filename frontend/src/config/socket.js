@@ -1,9 +1,20 @@
 import { io } from "socket.io-client";
 import { getAccessToken, refreshAuthOnce } from "./api.js";
 
+const socketUrlFromApiBase = () => {
+      const apiBase = import.meta.env.VITE_API_BASE_URL;
+      if (!apiBase) return "";
+      try {
+            // VITE_API_BASE_URL ends in /api/v1, but Socket.io needs the bare origin.
+            return new URL(apiBase).origin;
+      } catch {
+            return apiBase;
+      }
+};
+
 const SOCKET_URL = import.meta.env.DEV
       ? import.meta.env.VITE_SOCKET_URL || "http://localhost:8000"
-      : import.meta.env.VITE_API_BASE_URL;
+      : import.meta.env.VITE_SOCKET_URL || socketUrlFromApiBase();
 
 if (!SOCKET_URL) {
       throw new Error("Socket URL is not configured. Set VITE_API_BASE_URL.");

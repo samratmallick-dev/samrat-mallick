@@ -1,0 +1,43 @@
+name: Keep Render API awake
+
+# Free Render web services sleep after ~15 minutes of inactivity.
+# This pings /health every 10 minutes so the instance stays warm.
+# NOTE: GitHub scheduled runs can be delayed, and frequent runs consume Actions
+# minutes on private repos. See docs/deployment.md for alternatives.
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: render-keep-alive
+  cancel-in-progress: true
+
+jobs:
+  ping:
+    name: Ping /health
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Ping health endpoint
+        env:
+          HEALTH_URL: ${{ secrets.RENDER_HEALTH_URL }}
+        run: |
+          set -euo pipefail
+          if [ -z "${HEALTH_URL:-}" ]; then
+            echo "::error::RENDER_HEALTH_URL secret is not set (see docs/deployment.md)"
+            exit 1
+          fi
+          # Allow up to 90s for a cold start to finish before giving up.
+          status=$(curl -sS -o /dev/null -w '%{http_code}' \
+            --max-time 90 --retry 1 --retry-delay 3 --retry-connrefused \
+            "$HEALTH_URL")
+          echo "Health endpoint returned HTTP $status"
+          case "$status" in
+            2??) echo "Backend is awake." ;;
+            *) echo "::warning::Unexpected status $status from health endpoint"; exit 1 ;;
+          esac

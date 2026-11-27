@@ -1,4 +1,11 @@
+import fs from "node:fs";
+import path from "node:path";
 import { createLogger, format, transports } from "winston";
+
+// `logs/` is gitignored, so it does not exist on a fresh Render deploy.
+// Create it before Winston opens the file transport, otherwise startup can fail.
+const logDirectory = path.resolve(process.cwd(), "logs");
+fs.mkdirSync(logDirectory, { recursive: true });
 
 const { combine, timestamp, label, printf } = format;
 
@@ -18,7 +25,7 @@ const Logger = createLogger({
       transports: [
             new transports.Console(),
             new transports.File({
-                  filename: "logs/info.log",
+                  filename: path.join(logDirectory, "info.log"),
                   level: "info",
             })
       ],

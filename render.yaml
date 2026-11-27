@@ -1,0 +1,76 @@
+# Render Blueprint — portfolio backend API
+# Create with: Render Dashboard > New > Blueprint > connect this repository.
+# See docs/deployment.md for the full production setup (secrets, keep-alive, bootstrap).
+
+services:
+  - type: web
+    name: samrat-mallick-portfolio-api
+    runtime: node
+    # Free instances sleep after ~15 min idle and need a cold start (~30-60s).
+    # Switch to 0.5c-512mb (Starter) to stay awake without a keep-alive ping.
+    plan: free
+    region: oregon                 # cannot be changed after creation
+    branch: main
+    rootDir: backend               # package.json lives in backend/
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /health
+    maxShutdownDelaySeconds: 30
+    # Deploys are triggered by .github/workflows/deploy.yml via a Render Deploy Hook.
+    # Set to "commit" instead if you prefer Render's native Git auto-deploy and
+    # then disable the deploy workflow to avoid duplicate deployments.
+    autoDeployTrigger: 'off'
+    envVars:
+      # --- Server ----------------------------------------------------------
+      - key: NODE_ENV
+        value: production
+      # --- Database --------------------------------------------------------
+      # Use the cluster URI WITHOUT a database name: code appends /MONGO_NAME.
+      # e.g. mongodb+srv://user:pass@cluster.mongodb.net
+      - key: MONGO_URL
+        sync: false
+      - key: MONGO_NAME
+        value: myportfolio
+      # --- CORS (frontend origin on Vercel + optional custom domain) -------
+      - key: ALLOWED_ORIGINS
+        sync: false
+      - key: CLIENT_URL
+        sync: false
+      # --- JWT -------------------------------------------------------------
+      - key: JWT_ACCESS_SECRET
+        generateValue: true        # 256-bit value, satisfies the 32-char minimum
+      - key: JWT_ISSUER
+        value: portfolio-backend
+      - key: JWT_AUDIENCE
+        value: portfolio-admin
+      - key: JWT_ACCESS_EXPIRES_IN
+        value: 15m
+      - key: REFRESH_TOKEN_TTL_DAYS
+        value: '7'
+      # --- Cookies (cross-site: Vercel frontend -> Render API) -------------
+      - key: COOKIE_SECURE
+        value: 'true'
+      - key: COOKIE_SAME_SITE
+        value: none
+      # --- One-time admin bootstrap (needed only for the first admin) -----
+      - key: ADMIN_BOOTSTRAP_SECRET
+        sync: false
+      # --- Hashing ---------------------------------------------------------
+      - key: BCRYPT_ROUNDS
+        value: '12'
+      # --- Cloudinary (required at startup) --------------------------------
+      - key: CLOUD_NAME
+        sync: false
+      - key: CLOUD_API_KEY
+        sync: false
+      - key: CLOUD_API_SECRET
+        sync: false
+      # --- Gmail API (contact form + OTP emails) ---------------------------
+      - key: GMAIL_CLIENT_ID
+        sync: false
+      - key: GMAIL_CLIENT_SECRET
+        sync: false
+      - key: GMAIL_REFRESH_TOKEN
+        sync: false
+      - key: GMAIL_SENDER
+        sync: false
