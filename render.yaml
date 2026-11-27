@@ -15,7 +15,6 @@ services:
     buildCommand: npm ci
     startCommand: npm start
     healthCheckPath: /health
-    maxShutdownDelaySeconds: 30
     # Deploys are triggered by .github/workflows/deploy.yml via a Render Deploy Hook.
     # Set to "commit" instead if you prefer Render's native Git auto-deploy and
     # then disable the deploy workflow to avoid duplicate deployments.
