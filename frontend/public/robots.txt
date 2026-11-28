@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /auth
+
+Sitemap: https://samrat-mallick-lx1b.vercel.app/sitemap.xml

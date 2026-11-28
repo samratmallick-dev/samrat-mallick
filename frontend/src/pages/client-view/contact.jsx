@@ -109,7 +109,7 @@ const MyContact = () => {
     {
       label: "Name",
       value: contactDetails?.name || "Samrat Mallick",
-      href: "https://myportfolio-io-dusky.vercel.app",
+      href: "https://samrat-mallick-lx1b.vercel.app",
     },
     {
       label: "Email",

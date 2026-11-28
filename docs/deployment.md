@@ -46,7 +46,7 @@ Repo → **Settings → Secrets and variables → Actions → New repository sec
 | Secret | Where to get it |
 | --- | --- |
 | `RENDER_DEPLOY_HOOK_URL` | Render service → **Settings → Deploy Hook** |
-| `RENDER_HEALTH_URL` | `https://<your-service>.onrender.com/health` |
+| `RENDER_HEALTH_URL` | Optional: `https://<your-service>.onrender.com/health`. The keep-alive workflow defaults to `https://myportfolio-io-28vb.onrender.com/health`; set this only when using a custom domain or after renaming the service. |
 
 `render.yaml` sets `autoDeployTrigger: 'off'`, so `deploy.yml` is the **only** deploy path for
 `backend/**`, `render.yaml`, and its own file changes. Frontend changes are deployed by Vercel.
@@ -87,7 +87,9 @@ Then redeploy the frontend. Add the Vercel domain (and any custom domain) to
 
 Free Render web services spin down after ~15 minutes without inbound traffic; the next
 request waits through a cold start (~30–60s). `keep-alive.yml` pings `/health` every
-10 minutes to prevent that.
+10 minutes to prevent that. It targets `https://myportfolio-io-28vb.onrender.com/health`
+by default; the `RENDER_HEALTH_URL` secret overrides it if the service moves to a custom
+domain or is renamed.
 
 - **Keep-alive must be external.** A timer inside the Node process stops when the instance sleeps.
 - Render's **Health Check** (`healthCheckPath`) only detects/restarts unhealthy services; it does **not** keep them awake.
@@ -112,3 +114,4 @@ request waits through a cold start (~30–60s). `keep-alive.yml` pings `/health`
 | `MONGO_URL is not defined` / connection fails | Set `MONGO_URL` and keep `MONGO_NAME`; don't put the DB name in `MONGO_URL`. |
 | Health check failing / deploy never healthy | Check Render logs; `PORT` is injected by Render (no hard-coded port needed). |
 | Deploy workflow not running | Check the `push` path filter (`backend/**`, `render.yaml`) and that the secret exists. |
+| Keep-alive job fails with an HTTP error | Confirm the health URL is correct; set `RENDER_HEALTH_URL` if the service uses a custom domain or was renamed. |

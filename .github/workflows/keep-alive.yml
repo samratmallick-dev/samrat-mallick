@@ -29,7 +29,7 @@ jobs:
         run: |
           set -euo pipefail
           if [ -z "${HEALTH_URL:-}" ]; then
-            echo "::error::RENDER_HEALTH_URL secret is not set (see docs/deployment.md)"
+            echo "::error::Health URL is empty; set the RENDER_HEALTH_URL secret (see docs/deployment.md)"
             exit 1
           fi
           # Allow up to 90s for a cold start to finish before giving up.
